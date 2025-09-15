@@ -88,4 +88,8 @@ HINT HINT HINT
 
 Write a few sentences about what you found in the data. What's the story here?
 
-#The biggest takeaways I got from the data was that UMD fees on student sustainability increased by 150%
+#The biggest takeaways I got from the data was that UMD fees on student sustainability increased by 150% from 2021 to 2024 and that spending on athletics had a 0% change, meaning that from 2021 to 2024, the university has not changed their spending (no increase or decrease) on athletics at all. Based on the average fees spent, the data shows that the university has dedicated the most money to recreation services. Based on all of this data, I think that the biggest story would probably be about the athletics, given that in the past couple of years, there have been new athletic facilities built on the UMD campus, so it doesn't make the most sense that there was no increase in athletic fees at all.   
+
+
+
+When you are done, save your work, switch to GitHub Desktop, then add, commit and push your changes to GitHub and submit the URL of the notebook in ELMS.
