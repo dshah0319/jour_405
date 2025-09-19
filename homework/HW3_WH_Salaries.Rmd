@@ -9,6 +9,7 @@ In this assignment, we will be working with a dataset containing information abo
 You will need to load the tidyverse library
 
 ```{r}
+library(tidyverse)
 ```
 
 Then you'll load the data from the web. The URL for the data is: https://raw.githubusercontent.com/dwillis/jour405/refs/heads/main/data/biden_wh_salaries_2024.csv. You will create a dataframe called `wh_salaries` that contains the data from this URL.
@@ -16,19 +17,22 @@ Then you'll load the data from the web. The URL for the data is: https://raw.git
 ### Task 2: Load the Data and Describe It
 
 ```{r}
+wh_salaries <- read_csv("https://raw.githubusercontent.com/dwillis/jour405/refs/heads/main/data/biden_wh_salaries_2024.csv")
 ```
 ### Task 3: Describe the Data
 
 You should examine that dataframe carefully by clicking on it in the Environment tab in RStudio. Write a couple of sentences describing the categories of incidents. From a reporting standpoint, what stands out to you about this data? Are there any salary values that will cause problems for analysis?
 
-ANSWER HERE
+The first thing that stood out to me about this data is that there are multiple White House employee or detailee positions that have an salary of $0. The status of the people in the data is split into employee and detailee -- detailee meaning a government agency employee who is temporarily assigned to work at the White House, while employees are people who are permanently staffed at the White House. Given this information, I was really surprised that people with the highest salaries were detailees. Something else that stood out to me was that even if one's position category is the same, for example a senior advisor, being a senior advisor for different things (for example immigration vs public engagement) means that there are different salaries. 
 
 ### Task 4: Calculate the Mean and Median of the Salaries
 
 Write code to calculate the mean and median of the salaries in the dataset using the `summarize()` function. You don't need to make a new dataframe, just display the results.
 
 ```{r}
-
+wh_salaries |> 
+    summarize(mean_wh_salaries = mean(salary),
+              median_wh_salaries = median(salary))
 ```
 
 ### Task 5: Add in the minimum and maximum salaries
@@ -36,17 +40,21 @@ Write code to calculate the mean and median of the salaries in the dataset using
 Take the code you just wrote and add in the minimum and maximum salaries (the functions for that are `min()` and `max()`). Your results should show four columns: mean_salary, median_salary, min_salary, max_salary.
 
 ```{r}
-
+wh_salaries |> 
+    summarize(mean_wh_salaries = mean(salary),
+              median_wh_salaries = median(salary),
+              min_salary = min(salary),
+              max_salary = max(salary))
 ```
 
 ### Task 6: Describe the Results
 
 Write a couple of sentences describing the results of your analysis. What do the mean and median salaries tell you about the data? What do the minimum and maximum salaries tell you? Are there any outliers in the data?
 
-ANSWER HERE
+The mean salary is $107036.6 and the median salary is $110500. The minimum salary is $0 and the maximum is $251258, and given how far away both of those values are away from both the mean and median, both of those values can probably be considered outlioers. Moreover, since there are a lot of really low values (such as the mutliple zeros) that pulls the mean below the median, making the median a beter indicator of a 'typical' salary.     
 
 ### Task 7: Story Idea
 
 Based on the data, what is your best story idea? What is the next step you would take to develop that story idea?
 
-ANSWER HERE
+Based on the data, the average white house salary appears to be around $110,000 per year, but the data also shows that there is a huge range in values of salaries, and that many positions for employees and detailees appear to be unpaid. My best story idea would be to investigate why there are so many unpaid positions, so next steps would involve researching what those positions are and if they have historically been unpaid positions.
