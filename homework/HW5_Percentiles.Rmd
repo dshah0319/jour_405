@@ -57,4 +57,21 @@ Violent crime in Ocean City jumped from 2019 to 2020, giving the beach town the 
 
 Crime data shows that Ocean City's violent crime rate rose from 13.1% to 24% in just one year, even as Baltimore, a city that has long been considered Maryland's most dangerous, saw a slight decline. Ocean City also recorded the highest property crime rates in both years, calling into question whether Ocean City's tourism industry has played a significant role in the crime rates going up.  
 
-### Task 9: Save 
+### Task 9: Save Your Work and Put it on GitHub
+
+Save this notebook, then commit it to your local repository. Push the changes to your GitHub repository and submit the URL for this file in ELMS.
+
+## task 10: hw 5 percentiles
+
+```{r}
+md_cities_percentiles <- md_cities_rates |>
+mutate(percentile = ntile(violent_rate_2020, 100))
+```
+
+1. 10 cities are above the 90th percentile. 
+2. I think that the results from calculating the IQR for violent crime rates in 2020 wouldn't change my story idea. The IQR shows the middle 50% of a dataset, and the IQR, being 4.2, shows that Ocean City's violent crime rate is an outlier compared to most of the other cities, supporting my original story idea about how Ocean City's violent crime increase is newsworthy and higher than what you would expect from the typical range of maryland cities. 
+
+```{r}
+md_cities_percentiles |>
+summarize(IQR_violent_rate_2020 = IQR(violent_rate_2020))
+```
