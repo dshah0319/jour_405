@@ -1,0 +1,116 @@
+---
+title: "Oct 1 Activities: M&Ms; Survey; Sampling"
+date: 9-30-2025
+---
+
+All three class activities are on this .rmd notebook
+
+Activity #1: Activity: M&Ms - Central Limit Theorem
+
+Working in groups, each group will get a handful of candy from the bag, and then count the number of red and black candies. Log those in this Google Sheet 
+
+https://docs.google.com/spreadsheets/d/1KOeoVTq2W7L2T9sWjwh5U_2f59GsTeAylVGD53rNWww/edit?usp=sharing
+
+(give your group a nice name).
+
+Take a look at the values that we all get - what do you notice about the patterns? This is an exercise about the central limit theorem. 
+
+The central limit theorem states that the sampling distribution of the mean of any independent, random variable will be normal or nearly normal, if the sample size is large enough.
+
+Then discuss and try to answer these questions:
+
+--How close is your group's mean to the true proportion of 0.5?
+--Why do different groups get different results?
+--What happens to individual extreme results when we combine all groups?
+--How does this relate to polls and surveys in real life?
+
+Write your answer below. And then you may eat the M&Ms.
+
+**A:**
+
+- Our group's mean (.89) was not close to the true proportion of 0.5 at all. 
+- Different groups get different results because it was a random sample and each of our sample sizes are different because the number of m&ms from the bag were not evenly distributed between groups. Moreover, I don't think that each bag of m&ms has the exact same number of m&ms per color. 
+- If you were to combine all the groups, individual extreme results would either pull the mean lower or higher depending if they are significantly smaller than the mean or significantly bigger. If the results were combined, the averages would be a lot more reliable because the individual extreme results would become more normalized. 
+- With polls in real life, this demonstrates how random samples aren't really representative of a population. 
+------------------------------------------------------------------------------
+
+# Activity #2:
+
+Belonging Survey
+
+Working in pairs, take a look back at the main findings from UMD's Belonging Survey:
+
+https://president.umd.edu/internal/belonging
+
+
+Specifically, focus on the "Sample Description" section and the Appendix. Discuss the differences and between the population and the sample, and what the document says about how the survey attempted to deal with them. Are there any decisions described in the document that raise questions in your minds? Detail the differences you see and your understanding of the methods they employed (it's ok if you don't understand all of them), and add your questions. You should discuss this as a pair but submit individually.
+
+**A:**
+UMD's  population is 53,485 while the sample was only 12,233. Based on the population and sample statistics, it looks like men were underrepresented in the sample while women were overrepresented. In the methodology, they state that "Over 25,000 qualitative responses were analyzed using content analysis to extract common themes and thematic patterning across respondents." That seems to be a part of how the survey attempted to deal with representing the population as accurately as they could with the sample, but I'm honestly not too sure what it means. The report also says how there were not enough responses from a few specific identities to create individual analyses, so the report grouped these identities together in an attempt to retain their perspectives. This risks not accurately representing these students view, but the report acknowledges that in their methodology but says that it was necessary for the data analysis. One question I have is in regard to the missing/unknown category. Would it be better to just omit those answers? And only include in the sample size people who indicated their demographic identities? 
+------------------------------------------------------------------------------
+
+# TASK 3: SAMPLING
+
+Based on the class sampling demo (available on Elms), sample data from a population using R and the Tidyverse. You should get started by loading the tidyverse in a new R block.
+
+### Task 1: Load the tidyverse
+
+**A**
+```{r}
+
+library(tidyverse)
+```
+
+
+### Task 2: Load 1,000 rows of data with the ages of people from 18-80
+
+**A**
+```{r}
+set.seed(42)
+younguns <- tibble(
+  age = sample(18:80, 100, replace = TRUE)
+)
+
+head(younguns)
+
+```
+
+### Task 3: Sample 100 rows of data from the dataset
+**A**
+```{r}
+
+sample_100 <-younguns |> 
+  sample_n(100)
+```
+
+
+### Task 4: Calculate the mean age and standard deviation of the sample
+**A**
+```{r}
+sample_100 |> summarize(mean = mean(age), sd = sd(age))
+
+```
+
+
+### Task 5: Calculate the mean age and standard deviation of the population
+**A**
+```{r}
+younguns |> summarize(mean = mean(age), sd = sd(age))
+
+```
+
+
+### Task 6: Compare the sample and population statistics
+**A**
+```{r}
+
+
+```
+
+Compare the means and standard deviations. Are they similar? Go back and re-run the sampling and statistics calculations with a smaller sample size. How do the results change?
+
+The mean is 49.87 which rounds up to 50, and the standard deviation is 17.5. When the mean and standard deviation are the same. When I ran the code with a sample size of 100 rather than 1000, the mean was 46.9 and the standard deviation was 16.9. 
+
+**A**:
+
+When finished, save your work, switch to GitHub Desktop, then add, commit and push your changes to GitHub and submit the URL of the notebook in ELMS.
