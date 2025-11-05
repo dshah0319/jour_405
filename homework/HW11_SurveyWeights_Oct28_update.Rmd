@@ -1,0 +1,228 @@
+---
+title: "HW11: Education Level and Survey Weighting"
+author: "Derek Willis/Rob Wells"
+date: 10-28-2025
+---
+
+
+**Diya Shah**
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+```
+
+# Introduction
+
+In this assignment, you'll examine how survey weighting affects our understanding of voting intentions across different education levels, using the data we examined in class. You'll calculate both weighted and unweighted statistics, create visualizations, and reflect on the implications for reporting.
+
+## The Data
+
+The nonvoters dataset contains survey responses about voting intentions and behaviors from a national survey. The survey was conducted prior to an election and includes demographic information like education level.
+
+```{r}
+# Load the dataset
+nonvoters_data <- read_csv("https://raw.githubusercontent.com/dwillis/jour405_files/refs/heads/main/nonvoters_data.csv")
+
+# Take a quick look at the data structure
+glimpse(nonvoters_data)
+```
+
+### Key Variables
+
+- `weight`: Survey weight assigned to each respondent
+- `Q21`: Voting intention (1 = Yes, 2 = No, 3 = Unsure/Undecided)
+- `educ`: Education level (College, Some college, High school or less)
+
+## Task 1: Education Distribution
+
+First, let's examine the distribution of education levels in our sample. **Replace "REPLACE_ME"** with the correct variable for education level.
+
+```{r}
+
+education_distribution <- nonvoters_data |>
+  count(educ) |>
+  mutate(percentage = n / sum(n) * 100)
+
+education_distribution
+```
+
+## Task 2: Reflection Question
+
+Why might education levels in survey samples often differ from the general population? What factors might cause certain education groups to be over or underrepresented?
+
+**From the data we can see that around 40% of responses came from college students, showing that they are overrepresented. This could be because people with higher education levels are more likely to respond to surveys, maybe because they are more politically engaged, are easier to reach in terms of getting the survey out to them, or more trusting of organizations and willing to respond to questions and provide personal information than people who aren't in college settings.**
+
+
+## Task 3: Unweighted Analysis by Education
+
+Now, let's calculate unweighted voting intentions by education level. This is what we would report if we didn't apply any weighting to our sample.
+
+```{r}
+# Calculate unweighted voting intentions by education
+unweighted_by_education <- nonvoters_data |>
+  # Filter out missing values
+  filter(!is.na(Q21), Q21 > 0, !is.na(educ)) |>
+  # Group by education and response
+  group_by(educ, Q21) |>
+  # Count responses
+  summarize(count = n(), .groups = "drop_last") |>
+  # Calculate percentages
+  mutate(total = sum(count),
+         percentage = count / total * 100) |>
+  ungroup()
+
+# Create a more readable format with voting intentions as columns
+unweighted_educ_summary <- unweighted_by_education |>
+  pivot_wider(
+    id_cols = educ,
+    names_from = Q21,
+    values_from = percentage,
+    names_prefix = "pct_"
+  ) |>
+  rename(
+    "Yes (%)" = pct_1,
+    "No (%)" = pct_2,
+    "Unsure (%)" = pct_3
+  )
+
+unweighted_educ_summary
+```
+
+## Task 4: Reflection Question
+
+Based just on this unweighted analysis, what headline might you write for a news story about education and voting intentions?
+
+**"Among nonvoter data, college graduates are  more likely to say they’ll vote" ”**
+
+## Task 5: Weighted Analysis by Education
+
+Next, let's apply survey weights to see how this changes our results. Instead of just counting responses, we'll sum the weights for each group. **Replace "REPLACE_ME"** with the appropriate weight variable
+
+```{r weighted-by-education}
+
+weighted_by_education <- nonvoters_data |>
+  # Filter out missing values
+  filter(!is.na(Q21), Q21 > 0, !is.na(educ)) |>
+  # Group by education and response
+  group_by(educ, Q21) |>
+  # Sum the weights instead of counting
+  summarize(weighted_count = sum(weight), .groups = "drop_last") |>
+  # Calculate weighted percentages
+  mutate(weighted_total = sum(weighted_count),
+         weighted_percentage = weighted_count / weighted_total * 100) |>
+  ungroup()
+
+# Create a more readable format
+weighted_educ_summary <- weighted_by_education |>
+  pivot_wider(
+    id_cols = educ,
+    names_from = Q21,
+    values_from = weighted_percentage,
+    names_prefix = "pct_"
+  ) |>
+  rename(
+    "Yes (%)" = pct_1,
+    "No (%)" = pct_2,
+    "Unsure (%)" = pct_3
+  )
+
+weighted_educ_summary
+```
+
+## Task 6: Reflection Questions
+
+1. How did the percentages change after applying weights? Which education group showed the biggest changes?
+
+**After applying the weights, the biggest changes occurred within the high school or less education group. Before weights, 73.5% were likely to say yes, but after applying the weights, this dropped to 70.8% for yes, and the no and unsure categories increased by around between 1-2 points. Whereas for the college and some college education groups, percentages remained very close to the unweighted statistics. **
+
+2. Why might the weighted results be considered more accurate than the unweighted results?
+
+**The weighted results could be considered more accurate because it accounts for differences in education levels between the survey sample and the general public. It better reflects the makeup of the population instead of over or underrepresenting a certain demographic.**
+
+## Task 7: Comparison of Weighted vs. Unweighted Results
+
+Let's create a direct comparison table to see the differences more clearly.
+
+```{r}
+
+comparison <- unweighted_educ_summary |>
+  inner_join(weighted_educ_summary, by = "educ", suffix = c("_unweighted", "_weighted")) |>
+  mutate(
+    # Calculate the differences between weighted and unweighted percentages
+    yes_diff = `Yes (%)_weighted` - `Yes (%)_unweighted`,
+    no_diff = `No (%)_weighted` - `No (%)_unweighted`,
+    unsure_diff = `Unsure (%)_weighted` - `Unsure (%)_unweighted`
+  ) |>
+  # Select just the columns we want to display
+  select(educ, yes_diff, no_diff, unsure_diff) |>
+  rename(
+    "Education Level" = educ,
+    "Yes (% point diff)" = yes_diff,
+    "No (% point diff)" = no_diff,
+    "Unsure (% point diff)" = unsure_diff
+  )
+
+comparison
+```
+
+## Task 8: Reflection Question
+
+Which education group shows the largest differences between weighted and unweighted results?
+
+**The high school or less education group. **
+
+## Task 9: Visualization
+
+Visualizations can help us see the differences more clearly. Let's create a bar chart comparing weighted and unweighted "Yes" responses by education level. **Replace "REPLACE_ME"** with the correct variable name
+
+```{r}
+educ_viz_data <- bind_rows(
+  # Unweighted data
+  unweighted_by_education |> 
+    filter(Q21 == 1) |>  # Only "Yes" responses (Q21=1)
+    mutate(Type = "Unweighted") |>
+    select(Type, educ, percentage),
+  
+  # Weighted data - 
+  weighted_by_education |> 
+    filter(Q21 == 1) |>  # Only "Yes" responses
+    mutate(
+      Type = "Weighted",
+      percentage = weighted_percentage
+    ) |>
+    select(Type, educ, percentage)
+)
+
+# Create a grouped bar chart
+ggplot(educ_viz_data, 
+       aes(x = educ, y = percentage, fill = Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_dodge(width = 0.9), vjust = -0.5) +
+  labs(
+    title = "Weighted vs. Unweighted 'Yes' Responses by Education",
+    subtitle = "Q21: Do you plan to vote in the November election?",
+    y = "Percentage (%)",
+    x = "Education Level"
+  ) +
+  scale_fill_manual(values = c("Unweighted" = "#619CFF", "Weighted" = "#F8766D")) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+```
+
+
+## Task 10: Final Reflection Questions
+
+1. Why is it important for journalists to understand survey weighting when reporting on polls?
+
+**It's important to understand survey weighting because it ensures that one's poll results and subsequent reporting on the statistics actually reflect the population.**
+
+2. How might the differences between weighted and unweighted results affect how you would report on this data?
+
+**Because of the differences in the unweighted and weighted data, I would potentially adjust my stories focus to how people with high school or less education levels have the lowest percentage of voting yes out of the three education categories**
+3. What additional information would you want to know about how the weights were calculated before using this data in a news story?
+**I would want to know what factors were taken into consideration when calculating the weights and how closely the new weighted data actually represents national population statistics.**
