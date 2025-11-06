@@ -1,7 +1,9 @@
 ---
 title: "ANOVA for Journalists: Analyzing College Admissions Test Scores"
-date: 8-22-2025
+date: 11-3-2025
 ---
+## Name: Diya Shah
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
@@ -60,10 +62,15 @@ admission_summary <- admissions_data |>
 print(admission_summary)
 ```
 
+Context: Fall 2024 midpoint SAT for University of Maryland was 1,465.
+
+
 **Task 3** Describe the data
 
 Write a couple of sentences describing the differences in SAT scores between types of colleges, using the descriptive statistics we just generated.
 
+
+**Task 3: Private universities have the highest average SAT scores with the lowest variation, which means that a lot of students have SAT scores that are around the mean (1435). Community colleges had the largest range of SAT scores, with the lowest being 786 and the highest 1393, giving it a range of 607, compared to the range of public school scores which is 528 and private schools which is 356. Community college scores also have the most amount of variation. **
 
 
 ## Task 4: Visualize the Data
@@ -108,6 +115,29 @@ summary(anova_result)
 
 The F-value is huge (284.3). The F-value measures the ratio of between-group variance to within-group variance, and this high value suggests the differences between college types far outweigh the variation within each type. The p-value is very low, indicating the differences between college types are statistically significant at any reasonable significance level. The three asterisks (***) highlight that this is significant at the 0.001 level. So we can say that with confidence that there are real differences in SAT scores between the three types of colleges.
 
+How do we know the F-value is huge?
+We can calculate the critical value for an F statistic by using the qf() function in R
+
+```{r}
+# Your ANOVA has:
+# df1 (between groups) = 2
+# df2 (within groups/residuals) = 297
+# Common alpha levels: 0.05, 0.01, 0.001
+
+# Critical values at different significance levels:
+critical_f_05 <- qf(0.95, df1 = 2, df2 = 297)
+critical_f_01 <- qf(0.99, df1 = 2, df2 = 297)
+critical_f_001 <- qf(0.999, df1 = 2, df2 = 297)
+
+cat("Here are the Critical F-values:\n")
+cat("alpha of α = 0.05: ", round(critical_f_05, 3), "\n")
+cat("alpha of α = 0.01: ", round(critical_f_01, 3), "\n")
+cat("alpha ofα = 0.001:", round(critical_f_001, 3), "\n")
+cat("The F-statistic is: 284.3\n")
+cat("Ratio to most extreme critical value (α=0.001) to the F statistic:", round(284.3/critical_f_001, 1), "x\n")
+```
+
+
 ## Task 5: Compare the differences between specific pairs
 
 ```{r post-hoc}
@@ -134,3 +164,12 @@ Based on our analysis, we can now answer:
 
 Answer those questions, providing evidence for your answers, and then write a headline and a lead paragraph reporting these findings using active voice and focusing on the differences across types.
 
+1. There is a significant difference in SAT scores across college types because all of the p-values are all extremely low (less than 0.001 which demonstrates that it is statistically significant). 
+
+2. The Public and Private colleges specifically statistically differ from each other based on the tests that we conducted. Based on the Tukey test that we did, the difference between SAT scores from public and private colleges is -74.4, which shows that there is a large statistical difference. While the differences between private and community and public and community are still statisically significance, the difference isn't as big as it between public and private.
+
+3. The difference between public and private is the largest difference (-74.4). The difference between public and community is 292.55 and the difference between private and community is 366.96. 
+
+Headline: Private schools maintain the highest SAT scores, in comparison to public and community colleges, data shows 
+
+SAT scores vary significantly between different college types, with private colleges leading with the highest SAT scores by wide margins. According to statistical testing, private colleges have SAT scores that average nearly 367 points higher than community colleges and about 74 points higher than public colleges. The differences in SAT scores between the types of colleges are statistically significant All differences are statistically significant, as based on testing, they all have extremely small p-values, indicating that the gaps in average SAT scores between college types are not due to chance. 
