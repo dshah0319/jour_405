@@ -1,0 +1,93 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+```
+
+
+My dataset shows crime data for each county in Maryland based from January 1, 2023 to December 31, 2024. The dataset displays the incident type, who the crime was against, in which county the crime took place, and which agency responded to the crime, for every crime that took place within the timeframe. The crime data was collected through the Uniform Crime Reporting Program. More information about the crime collection data can be found here: https://cde.ucr.cjis.gov/LATEST/webapp/#/pages/explorer/crime/nibrs-estimates 
+
+Offense Category Name will be an important column for me to look at because it tells me the type of crime and will be useful in seeing which types of crime are the most common for each county and how that might have changed over the time period. Data year and incident date tell me when the crime occured and I can use this column to compare yearly totals and also to see if there are monthly or seasonal patterns when it comes to crime or certain incidents. Lastly, county name will be important because it will allow me to compare crime statistics across the counties in Maryland and see which counties experienced increases or decreases. 
+
+Population data for each county is something that will definitely be important to know and that information has been provided here: https://raw.githubusercontent.com/wellsdata/Jour405_student_repo_fall_2025/refs/heads/main/project/md_county_pop.csv 
+Knowing some demographic data would also be journalistically valuable when it comes to explaining some of the trends or pattern I will examine. 
+
+I chose the incident hour column and found that the average time a crime was committed was 11:39, the median hour was 12pm, and the minimum and max were 0 and 23. But I realized that these statistics weren't the most useful or relevant, so I also found the mean, median, min, and max of the total number of crime incidents by county. Doing this gave me the highest and lowest number of crimes, which shows which county had the highest (Baltimore County) and which county had the lowest (Kent County). And by finding the mean and median, it gave me an idea of the typical scale of crime activity across the state.
+
+Hypothesis: I want my hypothesis to focus on overall crime trends in Maryland across counties from 2023 to 2024. Testing this hypothesis will reveal whether the difference in reported crime is statistically significant or not.
+Null: The mean number of reported incidents per county in 2024 is not more than 5% lower than in 2023.
+Alternative: The mean number of reported incidents per county in 2024 is more than 5% lower than in 2023. 
+
+It would also be interesting to focus on one particular crime category, such as Larceny/Theft Offenses which is category with the highest number of offenses. I could look at one category and the number of incidents experienced in each county to see if there are any patterns and if those patterns follow any geographic trends. 
+
+```{r}
+md_crime_data <- read_csv("md_crime2023-2024.csv")
+
+```{r}
+category_counts <- md_crime_data |>
+  count(offense_category_name, name = "numberof_incidents") |>
+  arrange(desc(numberof_incidents))
+```
+*trying to figure out how many incidents there were overall for each crime category
+- Larceny/Theft offenses, Assault offenses, and 	
+Destruction/Damage/Vandalism of Property were top three crime categories
+- Gambling, bribery, and non-forcible sex offenses were the bottom three
+
+
+```{r}
+crimes_by_county <- md_crime_data |>
+  count(county_name, data_year, name = "incidents") |>
+  arrange(desc(incidents))
+
+crimes_by_county
+```
+* looking at the total number of crimes by year for each county
+- Baltimore, PG, and Baltimore City having the highest
+- it looks like crime has decreased from 2023 to 2024 a good amount of the counties but not all
+  - for example, anne arundel had a pretty big increase in crime, while PG county had a significant decrease
+
+```{r}
+crimes_by_county |>
+  summarise(
+    mean_incidents = mean(incidents),
+    median_incidents = median(incidents),
+    min_incidents = min(incidents),
+    max_incidents = max(incidents)
+  )
+```
+*basic statistics for total number of crime incidents by county
+- pretty large difference between the mean and median, mean is a lot bigger which shows that the data is skewed. this indicates that there are probably a few counties with extremely high numbers of crime which is pulling the average up
+
+```{r}
+incident_hour_stats <- md_crime_data |>
+  summarise(
+    mean_hour = mean(incident_hour, na.rm = TRUE),
+    median_hour = median(incident_hour, na.rm = TRUE),
+    min_hour = min(incident_hour, na.rm = TRUE),
+    max_hour = max(incident_hour, na.rm = TRUE)
+  )
+
+incident_hour_stats
+```
+
+```{r}
+md_crime_data |>
+  count(data_year, name = "total_incidents")
+```
+*finding out how many total crimes there were in 2023 and 2024 to see how the amount of crime differed between both years
+- shows that crime increased from 2023 to 2024
+  - difference of 4022 
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
