@@ -1,6 +1,6 @@
 ---
 title: "Multiple Regression Analysis: Maryland Voter Turnout"
-name: "YOUR NAME HERE"
+name: "Diya Shah"
 date: 8-24-2025
 ---
 
@@ -27,7 +27,8 @@ head(md_turnout)
 
 Before building our model, let's explore the data to understand the variables and their relationships. Examine the correlation matrix to see how the independent variables relate to each other and to the dependent variable (voter turnout). Which variables seem to be correlated? Are there any that are not correlated at all? Also look at the multiple scatterplots. Which variables seem to have a linear relationship with the dependent variable? Which do not?
 
-ANSWER HERE
+Looking at the correlation matrix, it looks like there is a positive correlation between pct_bachelors_higher and income, as well as pct_white and turnout. It also looks like pct_unemployed and turnout have a negative correlation. Median age and pct_bachelors_higher look like they have no correlation. Based on the scatterplots, it looks like pct_white and voter turnout have the strongest positive linear relationship, while pct_unemployed and voter turnout have the strongest negative linear relationship. 
+
 
 
 ```{r}
@@ -90,7 +91,7 @@ The coefficients tell us the estimated effect of each independent variable on th
 
 Examine the output of the model, checking the coefficients, residuals, and overall model fit. How well does this multiple variable model predict turnout? Do any of the variables seem to be insignificant? Is this a useful model, based on what you've seen? Why?
 
-ANSWER HERE
+The median residual is close to 0 which means that the model is generally centered around the data points. The population, bachelors degree or education variable, and unemployment are all variables that are not statistically significant based on the model, whereas income, age, and race are significant, with income having the highest level of statistical significance. The model indicates that the higher the income, the higher the voter turnout, the counties with an older median population tend to have higher turnout, and counties with a higher percentage of white residents also end up having a higher turnout. I think this is a useful model. The mutliple r squared shows that around 85% of the variation in turnout is explained by the model, and based on the adjusted r squared, the model still explains 80% of turnout variation which means that there aren't too many unnecessary variables being used. Lastly, the f-statistic and p-value indicate that the model is highly statistically significant, which proves its usefulness. 
 
 ```{r}
 # Build initial model with all predictors
@@ -104,19 +105,20 @@ summary(initial_model)
 
 Create three alternative models by adding or removing variables to see if we can improve the model's performance. Turnout will always be the dependent variable, but you should alter the independent variables by removing or adding some. Then compare the models using adjusted R-squared values. Are any of the models significantly better than the others?
 
-ANSWER HERE
+Based on my alternative models, my model 3 had the same adjusted r squared as the original model 1 (80%) which made it slightly better than models 2 and 4. Model 4 was the worst with an adjusted r squared value of 70%.  
 
 ```{r}
 # Model 2
-model2 <- lm(turnout ~ REPLACE ME, data = md_turnout)
+model2 <- lm(turnout ~ income + pct_white + pct_unemployed, data = md_turnout)
 summary(model2)
 
 # Model 3
-model3 <- lm(turnout ~ REPLACE ME, data = md_turnout)
+model3 <- lm(turnout ~ income + pct_white + median_age, data = md_turnout)
 summary(model3)
 
 # Model 4
-model4 <- lm(turnout ~ REPLACE ME, data = md_turnout)
+model4 <- lm(turnout ~ population + pct_bachelors_higher + 
+                   pct_unemployed + median_age + pct_white, data = md_turnout)
 summary(model4)
 
 # Compare models
@@ -145,4 +147,4 @@ ggplot(model_comparison, aes(x = reorder(Model, Adjusted_R_squared), y = Adjuste
 
 Without using the words "multiple regression model", describe how you could use this analysis to cover an election or voter participation story.
 
-ANSWER HERE
+I could use this analysis to write a story talking about which characteristics of a county's demographic data are the most connected to voter participation and turnout. With this analysis I found out that counties with higher incomes lead to a higher voter turnout, and that counties with older residents and a larger white population also tend to have a higher voter turnout. The analysis also shows me which factors don't impact voter turnout which would be helpful to use when covering an election or voter participation story as it would ensure I don't waste time trying to explore angles that don't actually produce any results. Moreover, using this analysis can help in a story by guiding which counties to focus coverage on, for example writing a story on what jobs make up the higher-income communities and why that might influence voter turnout. 
