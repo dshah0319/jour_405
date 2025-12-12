@@ -1,0 +1,333 @@
+---
+title: "Final Project Submission"
+name: "Diya Shah"
+date: 12/12/2025
+output: html_notebook
+---
+
+ 
+
+```{r}
+library(tidyverse)
+```
+
+
+My dataset shows crime data for each county in Maryland based from January 1, 2023 to December 31, 2024. The dataset displays the incident type, who the crime was against, in which county the crime took place, and which agency responded to the crime, for every crime that took place within the timeframe. The crime data was collected through the Uniform Crime Reporting Program. More information about the crime collection data can be found here: https://cde.ucr.cjis.gov/LATEST/webapp/#/pages/explorer/crime/nibrs-estimates 
+
+Offense Category Name will be an important column for me to look at because it tells me the type of crime and will be useful in seeing which types of crime are the most common for each county and how that might have changed over the time period. Data year and incident date tell me when the crime occured and I can use this column to compare yearly totals and also to see if there are monthly or seasonal patterns when it comes to crime or certain incidents. Lastly, county name will be important because it will allow me to compare crime statistics across the counties in Maryland and see which counties experienced increases or decreases. 
+
+
+Population data for each county is something that will definitely be important to know and that information has been provided here: https://raw.githubusercontent.com/wellsdata/Jour405_student_repo_fall_2025/refs/heads/main/project/md_county_pop.csv 
+Knowing some demographic data would also be journalistically valuable when it comes to explaining some of the trends or pattern I will examine. 
+
+I chose the incident hour column and found that the average time a crime was committed was 11:39, the median hour was 12pm, and the minimum and max were 0 and 23. But I realized that these statistics weren't the most useful or relevant, so I also found the mean, median, min, and max of the total number of crime incidents by county. Doing this gave me the highest and lowest number of crimes, which shows which county had the highest (Baltimore County) and which county had the lowest (Kent County). And by finding the mean and median, it gave me an idea of the typical scale of crime activity across the state.
+
+Hypothesis: I want my hypothesis to focus on overall crime trends in Maryland across counties from 2023 to 2024. Testing this hypothesis will reveal whether the difference in reported crime is statistically significant or not.
+
+Null: Crime in Maryland counties essentially stayed the same from 2023 to 2024; the average per-capita crime rate in 2024 is greater than or equal to 95% of the 2023 average.
+
+
+Alternative: Crime in Maryland counties declined meaningfully from 2023 to 2024; the average per-capita crime rate in 2024 is less than 95% of the 2023 average. 
+
+
+
+
+It would also be interesting to focus on one particular crime category, such as Larceny/Theft Offenses which is category with the highest number of offenses. I could look at one category and the number of incidents experienced in each county to see if there are any patterns and if those patterns follow any geographic trends. 
+
+```{r}
+md_crime_data <- read_csv("md_crime2023-2024.csv")
+
+#rsw comment  cut this random code bit: ```{r}
+category_counts <- md_crime_data |>
+  count(offense_category_name, name = "numberof_incidents") |>
+  arrange(desc(numberof_incidents))
+```
+*trying to figure out how many incidents there were overall for each crime category
+- Larceny/Theft offenses, Assault offenses, and 	
+Destruction/Damage/Vandalism of Property were top three crime categories
+- Gambling, bribery, and non-forcible sex offenses were the bottom three
+
+
+
+```{r}
+crimes_by_county <- md_crime_data |>
+  count(county_name, data_year, name = "incidents") |>
+  arrange(desc(incidents))
+
+crimes_by_county
+```
+* looking at the total number of crimes by year for each county
+- Baltimore, PG, and Baltimore City having the highest
+- it looks like crime has decreased from 2023 to 2024 a good amount of the counties but not all
+  - for example, anne arundel had a pretty big increase in crime, while PG county had a significant decrease
+  
+  #rsw comment: join with population and do a per-capita calculation
+```{r}
+md_county_population <- read_csv("https://raw.githubusercontent.com/wellsdata/Jour405_student_repo_fall_2025/refs/heads/main/project/md_county_pop.csv") 
+```
+* loading the county population data
+
+```{r}
+md_countycrime_pop <- merge(
+  x = crimes_by_county,
+  y = md_county_population,
+  by.x = "county_name",
+  by.y = "county",
+)
+```
+* merging the crime by county data set with the md county population data set
+
+```{r}
+md_countycrime_pop$incidents_per_1000 <- (md_countycrime_pop$incidents / md_countycrime_pop$population) * 1000
+```
+* calculated the rate of crime per 1000 people for each county
+
+
+```{r}
+crimes_by_county |>
+  summarise(
+    mean_incidents = mean(incidents),
+    median_incidents = median(incidents),
+    min_incidents = min(incidents),
+    max_incidents = max(incidents),
+    sd_incidents = sd(incidents)
+  )
+```
+*basic statistics for total number of crime incidents by county; added sd
+- pretty large difference between the mean and median, mean is a lot bigger which shows that the data is skewed. this indicates that there are probably a few counties with extremely high numbers of crime which is pulling the average up
+
+
+
+```{r}
+incident_hour_stats <- md_crime_data |>
+  summarise(
+    mean_hour = mean(incident_hour, na.rm = TRUE),
+    median_hour = median(incident_hour, na.rm = TRUE),
+    min_hour = min(incident_hour, na.rm = TRUE),
+    max_hour = max(incident_hour, na.rm = TRUE)
+  )
+
+incident_hour_stats
+```
+
+```{r}
+md_crime_data |>
+  count(data_year, name = "total_incidents")
+```
+*finding out how many total crimes there were in 2023 and 2024 to see how the amount of crime differed between both years
+- shows that crime increased from 2023 to 2024
+  - difference of 4022 
+  
+First statistical test: one sided t-test to test my null and alternative hypotheses
+Null: The mean per-capita number of reported incidents per county in 2024 is greater than or equal to 95% of the mean in 2023.
+Alternative: The mean per-capita number of reported incidents per county in 2024 is less than to 95% of the mean in 2023
+
+```{r}
+crime_rates <- md_countycrime_pop |>
+  select(county_name, data_year, incidents_per_1000)
+```
+*pulling the information and data needed for the test into one column -- named crime_rates
+
+```{r}
+crime_rates_2023 <- crime_rates$incidents_per_1000 [crime_rates$data_year == 2023]
+
+crime_rates_2024 <- crime_rates$incidents_per_1000 [crime_rates$data_year == 2024] 
+```
+* created vectors for the per capita crime rates for each county for 2023 and 2024 
+
+```{r}
+crime_rates_wide <- crime_rates |>
+  pivot_wider(
+    names_from = data_year,
+    values_from = incidents_per_1000,
+    names_prefix = "per-capita-rate_"
+  )
+```
+*I wanted to be able to see the the per-capita crime rates for 2023 and 2024 in seperate columns in in my data set to make it easier to read so I asked chatgpt if there was a way to do that and used wide format to create another data set to read the data easier https://chatgpt.com/share/6925e4a9-4388-800f-8980-ca6ed243c0fe
+
+```{r}
+crime_rates_wide$difference <- crime_rates_wide$`per-capita-rate_2024` - 0.95 * crime_rates_wide$`per-capita-rate_2023`
+```
+* I created the difference column and calculated each county's 2024 per capita crime rate minus 95% of its 2023 rate which will allow me to test whether the 2024 rate was significantly below 95% of the 2023 rate. The negative values indicate that the county's 2024 rate is below 95% of its 2023 rate, while the positive values indicate the inverse
+
+```{r}
+alpha_level <- 0.05
+t_test_result <- t.test(
+  crime_rates_wide$difference,
+  mu=0,
+  alternative = "less" )
+
+t_test_result
+
+```
+* performed t-test
+The t-test resulted in a p-value of 0.987 which is much large than 0.05, leading me to fail to reject my null hypothesis. This means that there is no statistical evidence that 2024 county per capita rates were less than 95% of 2023 crime rates. The positive mean difference of 8.37 actually shows that on average, county's 2024 per capita crime rates were higher in 2024 than in 2023. After doing this, I'm wondering if I could test and see whether crime increased by more than 5% from 2023 to 2024 instead.
+Null: The average county crime rate in 2024 did not increase by more than 5% in comparison with 2023. 
+Alternative: The average county crime rate in 2024 increased by more than 5% in comparison with 2023. 
+
+```{r}
+crime_rates_wide$difference_increase <- crime_rates_wide$`per-capita-rate_2024` - 1.05 * crime_rates_wide$`per-capita-rate_2023`
+```
+
+
+```{r}
+alpha_level <- 0.05
+t_test_increase_result <- t.test(
+  crime_rates_wide$difference_increase,
+  mu=0,
+  alternative = "greater" )
+
+
+t_test_increase_result
+```
+* based on the results of this t-test I can see that based on the positive mean of 2.85, there was an increase in average crime from 2023 to 2024, but based on the p-value of 0.23 (which is bigger than 0.05), I fail to reject the null again, meaning that there is not enough statistical evidence to prove that per capita crime increased by more than 5% from 2023 to 2024.
+
+
+For my second test, I am going to do an ANOVA test to compare per-capita larceny/theft rates across Maryland counties in 2024 as that was the offense category with the highest number of incidents. 
+
+```{r}
+theft_data <- md_crime_data |>
+  filter(offense_category_name == "Larceny/Theft Offenses")
+```
+* creating a data set that has only all of the theft incidents
+
+```{r}
+county_theft <- theft_data |>
+  group_by(county_name, data_year) |>
+  summarise(number_of_theft = n(), .groups = "drop" )
+```
+* creating a data set that has the information relevant to my test - showing how many incidents of thefts there were for each county by year
+
+```{r}
+md_county_population <- md_county_population |>
+  rename(county_name = county)
+```
+* renamed the column in for county population so that it matches my county_theft data set
+
+```{r}
+county_theft_population <- county_theft |>
+  left_join(md_county_population, by = "county_name")
+```
+*combining the county population data set with my dataset that shows theft by county. 
+- when I did that I saw that some of the population columns states n/a and I realized that it's because the names of the counties for for some of them do not match up exactly. I searched online how to fix this. 
+
+```{r}
+county_theft <- county_theft |>
+  mutate(county_name = case_when( 
+         county_name == "BALTIMORE CITY" ~ "BALTIMORE CITY, MARYLAND",
+         county_name == "CARROLL, FREDERICK" ~ "CARROLL",
+         county_name == "ST MARY'S" ~ "ST. MARY'S",
+         TRUE ~ county_name)
+)
+```
+*fixing the names so that they match
+
+```{r}
+county_theft_population <- county_theft |>
+  left_join(md_county_population, by = "county_name")
+```
+*i now have a dataset that shows the number of thefts for each county by year as well as each of the county's population
+
+```{r}
+county_theft_population <- county_theft_population |>
+  mutate(theft_per_capita = (number_of_theft / population) *1000 )
+```
+*calculated the theft per capita for each county and year
+
+```{r}
+theft_2024 <- county_theft_population |>
+  filter(data_year == 2024)
+```
+* created a new dataset that only shows county theft data for 2024 as that is what I am using for the ANOVA test
+
+```{r}
+anova_theft <- aov(theft_per_capita ~ county_name, data = theft_2024)
+
+summary(anova_theft)
+```
+* the ANOVA test is testing whether 2024 per capita theft rates differ significantly across Maryland counties. My p-value is 0.628 which is larger than 0.05 which shows that the differences in per capita theft rates across all of the counties is not statistically significant, which means that there probably isn't a geographical factor that is influencing theft rates across counties. Having a low f-value (1.207) also indicates low variation. 
+
+
+
+
+
+```{r}
+tukey_test_theft <- TukeyHSD(anova_theft)
+
+tukey_test_theft
+```
+* I ran a tukey post-hoc test just to see what it would present but the results were not useful to me. I want to see if running the ANOVA test with both years instead of just 2024 will produce a different result. 
+
+```{r}
+anova_theft_years <- aov(theft_per_capita ~ county_name + data_year, data = county_theft_population)
+
+summary(anova_theft_years)
+```
+*with running the ANOVA test with both year and county, I was still testing to see if some Maryland counties have higher per-capita theft rates than others, as well as seeing if theft rates changed from 2023 to 2024. 
+According to the test, by adding the data of 2023 as well, the results show a p-value of 1.8e-07 for the counties, which is very very small (much below 0.05) and therefore displaying statistical significance which means that there are statistically significant differences in per-capita theft rates across Maryland counties when analzying both years together. On testing to see if there is a statisically significant difference in theft rates between years, the result was a p-value of 0.0718, which is just slightly above 0.05, meaning that theft rates between 2023 and 2024 were slightly different, but not enough to be statistically significant at a 0.05 level. 
+
+ 
+```{r}
+tukey_test_county <- TukeyHSD(anova_theft_years, "county_name")
+tukey_test_county
+```
+*ran a tukey test for my two factor ANOVA.
+
+```{r}
+tukey_data <- as.data.frame(tukey_test_county$county_name)
+```
+* created data frame for the results to make it easier to read
+
+```{r}
+significant_pairs <- tukey_data |>
+  filter(`p adj` < 0.05)
+significant_pairs
+```
+* filtering for the statistically significant pairs (ones with p adj that are less than 0.05)
+These pairings indicate that Baltimore has sginificantly different, or higher, per capita theft rates than other more rural or less populated counties like Calvert, Carroll, or Cecil County. There is a similar situation with Anne Arundel county as well, as it is more urban and has a higher population than the more rural counties. Overall, this analysis demonstrates that geographic and population differences play a role in shaping patterns of theft across Maryland. 
+
+
+for my data visualization I'm going to create a bar graph of what I tested for the Anova test -- the per capita theft rates in maryland counties in 2023 and 2024
+
+```{r}
+county_theft_population <- county_theft_population |>
+  mutate(data_year = factor(data_year))
+
+ggplot(county_theft_population,
+       aes(x = reorder(county_name, theft_per_capita),
+           y = theft_per_capita,
+           fill = data_year)) +
+  geom_col (position = "dodge") +
+  coord_flip() +
+  labs(
+    title = "2023 vs 2024 Per-Capita Theft Rates for Maryland Counties",
+    x = "Maryland County",
+    y = "Theft Incidents per 1,000 Residents",
+    fill = "Year") +
+  theme(
+    axis.text.y = element_text(size = 5)
+  )
+
+
+```
+ 
+* In creating the bar graph I encountered a couple of problems that I used the internet to figure out how to solve. I learned how to use position = "dodge" to prevent overlap as well as learning that coord_flip can flip the x and y axises which the graph much easier to read and understand. When I first made the graph the years were showing up as a spectrum, from 2023 to 2023.25 and so on until 2024. That obviously made the graph difficult to understand and didn't make much sense, so after googling why it was showing up like that, I learned that data_year had to be converted into a categorical variable instead of a numerical one so that 2023 and 2024 would show up as discrete bars on the graph.
+*made the font size for county names smaller
+
+I thought that doing this graph would be a good data visualization because it shows how theft rates were slightly higher in 2024 than in 2023 and it is also a good visual of which counties had some of the highest crime rates. It also displays how theft rates vary across counties but and that even though the 2024 theft rates are for the most part slightly higher than those of 2023, one can also see that there aren't largely significant differences between the 2023 and 2024 theft rates.
+
+Draft story pitch:
+My story pitch would be about exploring the specific factors that contribute to certain urban and higher populated counties, like Baltimore and Anne Arundel, having higher rates of theft than more rural counties.  
+A statistical analysis of Maryland crime data shows that overall crime levels did not meaningfully change between 2023 and 2024. Using a one sample t-test, I found that there is no statistical evidence that indicates that overall crime in Maryland counties increased or decreased by more than 5% from 2023 to 2024. Although average crime rates did shift, the shifts were slight and not large enough to be considered statistically significant.
+
+Based on the data, I found that the crime category with the most number of offenses overall was larceny/theft offenses. Through the statistical tests that I ran, I found that differences in theft rates are most likely based on geographic factors. Counties in more urban areas with higher populations experience significantly higher per-capita theft rates than other more rural counties. I also found that while there was a difference in theft rates between 2023 and 2024, the difference was not large enough to be statistically significant.
+I ran a two factor ANOVA test and found that theft rates vary substantially by county. My follow up Tukey test showed that urban and suburband counties, Baltimore County and Anne Arundel, had significantly higher per-capita theft rates than more rural counties like Calvert, Allegany, and Carroll. These results point to clear geographic patterns when it comes to theft rates in Maryland. 
+
+One problem or limitation with my analysis is that when I was using the population data, there were some mismatches in terms of the county names, so in trying to clean that up, some of data was excluded which could potentially affect results. Moreover, doing a county level analysis overlook variation in large and diverse counties like Baltimore County and Prince Georges County. 
+
+To report on this story I would want to interview and talk to the police departments in different counties and see if there are any differences in how they report, catch, enforce crime. I would also want to see what businesses or places are most often the victims of theft and interview those people to contextualize how theft affects people and the community. I would also want to interview local experts to get their perspective or analysis on why theft rates are higher in certain counties. Lastly, I would also want to compare my findings to earlier years of data to see whether the georgraphic differences I identified have been persistent over time or if patterns have changed. 
+
+```
+
+
+
